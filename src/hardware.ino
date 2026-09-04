@@ -4,11 +4,12 @@
  *
  */
 
-#include <ESP8266WiFi.h>
+#include <WiFi.h>
 #include <WiFiClientSecure.h>
 
 #include <Wire.h>
 
+#include "esp_sleep.h"
 #include "config.h"
   
 
@@ -43,7 +44,7 @@ void connect_to_wifi() {
     // If the connection takes too long, reset the board
     if (i > 20)
       // Sleep
-      ESP.deepSleep(SLEEP_TIME); 
+      esp_deep_sleep(SLEEP_TIME); 
     else
       i++;
   }
@@ -54,7 +55,7 @@ void connect_to_wifi() {
 }
 
 void http_post_request(const char* hostname, uint16_t port, String request, String data) {
-  BearSSL::WiFiClientSecure client;
+  WiFiClientSecure client;
   client.setInsecure();
 
   //Serial.print(String("[Connecting to ") + hostname + String(" ... "));
@@ -67,7 +68,7 @@ void http_post_request(const char* hostname, uint16_t port, String request, Stri
     // If the connection takes too long, reset the board
     if (i > 20)
       // Sleep
-      ESP.deepSleep(SLEEP_TIME); 
+      esp_deep_sleep(SLEEP_TIME); 
     else
       i++;
   }
@@ -79,7 +80,7 @@ void http_post_request(const char* hostname, uint16_t port, String request, Stri
                "Host: " + hostname + "\r\n" +
                "Content-Type: application/json\r\n" +
                "Content-Length: " + data.length() + "\r\n" +
-               "User-Agent: ESP8266\r\n" +
+               "User-Agent: ESP32-C6\r\n" +
                "\r\n" + data);
   /*
   Serial.println("[Response:]");
@@ -170,7 +171,7 @@ void loop() {
   Temp = Temp/NB_MEASURE;
 
   // Read battery level
-  float battery = analogRead(A0) * (3.3 / 1023.0) * 2;
+  float battery = analogReadMilliVolts(BATTERY_PIN) * 2.0 / 1000.0;
   
   //Serial.println("MPU-6050 :");
   //Serial.print(" X = "); Serial.println(X);
@@ -190,5 +191,5 @@ void loop() {
           String("\", \"battery\": \"") + battery + String("\"}"));
 
   // Sleep
-  ESP.deepSleep(SLEEP_TIME); 
+  esp_deep_sleep(SLEEP_TIME); 
 }
