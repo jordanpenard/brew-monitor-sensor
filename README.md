@@ -1,12 +1,12 @@
 # brew-monitor-sensor
 
-<!-- ![Brew monitor sensor](tbd) -->
+<img src="https://repository-images.githubusercontent.com/1212292092/bbb96cc4-2552-4e39-a723-5ca62c6b8369" alt="Brew monitor sensor" width="200"/>
 
 Sensor firmware that reads an MPU-6050 accelerometer, computes the tilt, and
 reports it — along with temperature and battery level — over Wi-Fi (HTTPS) to a
-brew-monitor server.
+[brew-monitor](https://github.com/jordanpenard/brew-monitor) server.
 
-[3D print model](https://cad.onshape.com/documents/5c8ebf59190fa9c41cdecdfd/w/c5e8581a19838dcd4a76320b/e/7499dd0d16ba707c51a30126?renderMode=0&uiState=6ab1652717a4b80c64eb5817)
+3D print model : [OnShape](https://cad.onshape.com/documents/5c8ebf59190fa9c41cdecdfd/w/c5e8581a19838dcd4a76320b/e/7499dd0d16ba707c51a30126?renderMode=0&uiState=6ab1652717a4b80c64eb5817)
 
 ## Bill of materials
 - Micro controller : Beetle ESP32-C6 (DFR1117)
@@ -16,7 +16,7 @@ brew-monitor server.
 
 ## Wiring
 
-![PCB Wiring](pcb_wiring.png)
+<img src="pcb_wiring.png" alt="PCB Wiring" width="400"/>
 
 - SDA of the MPU connect to GPIO19 of the ESP32-C6
 - SCL of the MPU connect to GPIO20 of the ESP32-C6
@@ -117,6 +117,48 @@ sends it to deep sleep; it will reopen the portal on the next boot.
 pio run -t erase
 pio run -t upload
 ```
+
+## Firmware updates (OTA)
+
+The firmware already includes WiFiManager's **Update** page (the `update` item in
+the portal menu), and the partition table in use already provides **two app
+slots** (`app0`/`app1`, 1.25 MB each), so over-the-air updates work with no
+code or partition changes.
+
+### Which binary to use
+
+- **`pio run`** produces `.pio/build/esp32-c6-super-mini/firmware.bin` — this is
+  the **app-only image** and the one to upload over OTA.
+- **`pio run -t upload`** (USB) flashes `bootloader.bin`, `partitions.bin` and
+  `firmware.bin` at their flash offsets automatically, so the very same
+  `firmware.bin` is used for both USB and OTA — **no second compile is needed**.
+- Do **not** upload the merged `firmware.factory.bin` (bootloader + partitions +
+  app, flashed at offset `0x0`) over OTA — it is only meant for USB flashing and
+  will corrupt the device if uploaded via the portal.
+
+### How to update OTA
+
+1. `pio run` to build the new firmware and take note of
+   `.pio/build/esp32-c6-super-mini/firmware.bin`.
+2. Open the config portal on the device (first boot, or press **BOOT** during
+   the LED capture window).
+3. Connect to the `BrewMonitor-<id>` AP, open the portal, and choose the
+   **Update** menu entry.
+4. Select `firmware.bin` and upload. The device validates, writes the image to
+   the inactive slot and reboots into the new firmware.
+5. Settings (NVS, namespace `brewmon`) are preserved across updates.
+
+### Constraints
+
+- The app must fit in the 1.25 MB app slot (currently ~94 % used). If it ever
+  grows past that, use a custom partition table (`board_build.partitions`) and
+  re-flash via USB once.
+- Keep the partition layout unchanged between builds — an OTA *binary* is only
+  valid for the partition table that was in use when the flash was last
+  programmed.
+- After an OTA reboot the device runs its normal boot flow (LED capture window
+  → measure → report → deep sleep). If a freshly uploaded firmware fails to
+  boot, the ESP32 bootloader rolls back to the previous slot.
 
 ### Tweaking
 
