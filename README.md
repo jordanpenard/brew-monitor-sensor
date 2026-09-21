@@ -1,8 +1,12 @@
 # brew-monitor-sensor
 
+<!-- ![Brew monitor sensor](tbd) -->
+
 Sensor firmware that reads an MPU-6050 accelerometer, computes the tilt, and
 reports it — along with temperature and battery level — over Wi-Fi (HTTPS) to a
 brew-monitor server.
+
+[3D print model](https://cad.onshape.com/documents/5c8ebf59190fa9c41cdecdfd/w/c5e8581a19838dcd4a76320b/e/7499dd0d16ba707c51a30126?renderMode=0&uiState=6ab1652717a4b80c64eb5817)
 
 ## Bill of materials
 - Micro controller : Beetle ESP32-C6 (DFR1117)
@@ -11,6 +15,9 @@ brew-monitor server.
 - Batterie : Panasonic 18650
 
 ## Wiring
+
+![PCB Wiring](pcb_wiring.png)
+
 - SDA of the MPU connect to GPIO19 of the ESP32-C6
 - SCL of the MPU connect to GPIO20 of the ESP32-C6
 - VIN and GND pins of ESP32-C6 connect to the batterie charger via a switch
